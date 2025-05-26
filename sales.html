@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shacham's Sales Commission Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-600 to-blue-500 min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white p-6 sm:p-8 rounded-xl card-shadow w-full max-w-lg">
+        <header class="mb-6 sm:mb-8 text-center">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Shacham Sales Commission Calculator</h1>
+            <p class="text-sm text-gray-600 mt-1">See how much you get to keep!</p>
+        </header>
+
+        <div class="mb-6">
+            <label for="salePrice" class="block text-sm font-medium text-gray-700 mb-1">Enter Sale Price ($):</label>
+            <input type="number" id="salePrice" name="salePrice" placeholder="e.g., 25.50" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out" oninput="calculateCommission()">
+        </div>
+
+        <div id="results" class="text-center mb-6">
+            <p class="text-lg sm:text-xl font-semibold text-gray-700">You get to keep:</p>
+            <p id="commissionAmount" class="text-3xl sm:text-4xl font-bold text-indigo-600 mt-1">$0.00</p>
+            <p id="totalSaleDisplay" class="text-xs text-gray-500 mt-1 hidden">from a $0.00 sale</p>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <h2 class="text-md font-semibold text-gray-700 mb-3 text-center sm:text-left">How it's Calculated:</h2>
+            <ul class="space-y-2 text-xs sm:text-sm text-gray-600">
+                <li><span class="font-medium text-indigo-600">100%</span> of the first <span class="font-medium">$5.00</span></li>
+                <li><span class="font-medium text-indigo-600">50%</span> of the next <span class="font-medium">$15.00</span> (from $5.01 to $20.00)</li>
+                <li><span class="font-medium text-indigo-600">30%</span> of the next <span class="font-medium">$80.00</span> (from $20.01 to $100.00)</li>
+                <li><span class="font-medium text-indigo-600">20%</span> of the next <span class="font-medium">$100.00</span> (from $100.01 to $200.00)</li>
+                <li><span class="font-medium text-indigo-600">10%</span> of anything over <span class="font-medium">$200.00</span></li>
+            </ul>
+        </div>
+
+        <div id="messageBox" class="mt-4 p-3 rounded-md text-sm text-center hidden">
+            <p id="messageText"></p>
+        </div>
+
+    </div>
+
+    <script>
+        // Function to calculate the commission
+        function calculateCommission() {
+            const salePriceInput = document.getElementById('salePrice');
+            const commissionAmountDisplay = document.getElementById('commissionAmount');
+            const totalSaleDisplay = document.getElementById('totalSaleDisplay');
+            const messageBox = document.getElementById('messageBox');
+            const messageText = document.getElementById('messageText');
+
+            // Hide message box by default
+            messageBox.classList.add('hidden');
+            messageBox.classList.remove('bg-red-100', 'text-red-700', 'bg-yellow-100', 'text-yellow-700');
+
+
+            let salePrice = parseFloat(salePriceInput.value);
+
+            if (isNaN(salePrice) || salePrice < 0) {
+                if (salePriceInput.value.trim() !== "") { // Only show error if there's some invalid input
+                    messageText.textContent = "Please enter a valid positive number for the sale price.";
+                    messageBox.classList.remove('hidden');
+                    messageBox.classList.add('bg-red-100', 'text-red-700');
+                }
+                commissionAmountDisplay.textContent = "$0.00";
+                totalSaleDisplay.classList.add('hidden');
+                return;
+            }
+             if (salePrice === 0 && salePriceInput.value.trim() === "0") {
+                 // If user explicitly enters 0, show $0.00
+                 commissionAmountDisplay.textContent = "$0.00";
+                 totalSaleDisplay.textContent = `from a $0.00 sale`;
+                 totalSaleDisplay.classList.remove('hidden');
+                 return;
+            }
+
+
+            let commission = 0;
+
+            // Tier 1: First $5 at 100%
+            if (salePrice <= 5) {
+                commission = salePrice * 1.00;
+            }
+            // Tier 2: Next $15 at 50%
+            else if (salePrice <= 20) { // 5 + 15 = 20
+                commission = (5 * 1.00) + ((salePrice - 5) * 0.50);
+            }
+            // Tier 3: Next $80 at 30%
+            else if (salePrice <= 100) { // 20 + 80 = 100
+                commission = (5 * 1.00) + (15 * 0.50) + ((salePrice - 20) * 0.30);
+            }
+            // Tier 4: Next $100 at 20%
+            else if (salePrice <= 200) { // 100 + 100 = 200
+                commission = (5 * 1.00) + (15 * 0.50) + (80 * 0.30) + ((salePrice - 100) * 0.20);
+            }
+            // Tier 5: Anything over $200 at 10%
+            else {
+                commission = (5 * 1.00) + (15 * 0.50) + (80 * 0.30) + (100 * 0.20) + ((salePrice - 200) * 0.10);
+            }
+
+            commissionAmountDisplay.textContent = `$${commission.toFixed(2)}`;
+            totalSaleDisplay.textContent = `from a $${salePrice.toFixed(2)} sale`;
+            totalSaleDisplay.classList.remove('hidden');
+        }
+
+        // Initial calculation in case there's a value on page load (e.g. browser remembers)
+        // but only if the input field is not empty.
+        window.onload = function() {
+            if (document.getElementById('salePrice').value) {
+                calculateCommission();
+            }
+        };
+    </script>
+
+</body>
+</html>
+
